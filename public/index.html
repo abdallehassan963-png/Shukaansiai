@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="so">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Shukaansi AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(160deg, #241220 0%, #3a1a2e 45%, #1a1024 100%);
+    color: #f3e9dc;
+    min-height: 100vh;
+  }
+  .fraunces { font-family: 'Fraunces', serif; }
+  .wrap { max-width: 560px; margin: 0 auto; padding: 48px 20px 80px; }
+  .eyebrow {
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    font-size: 12px; letter-spacing: 2px; text-transform: uppercase;
+    color: #d4a24e; margin-bottom: 14px; text-align: center;
+  }
+  h1 { font-size: 34px; font-weight: 700; line-height: 1.15; text-align: center; margin-bottom: 10px; }
+  .sub { color: #c9b8ae; font-size: 15px; max-width: 380px; margin: 0 auto 40px; text-align: center; }
+  .drop-zone {
+    position: relative;
+    border: 1.5px dashed #6b4a5a;
+    border-radius: 16px;
+    padding: 48px 24px;
+    text-align: center;
+    background: rgba(255,255,255,0.02);
+    overflow: hidden;
+    cursor: pointer;
+  }
+  .drop-zone input {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    opacity: 0; cursor: pointer;
+  }
+  .drop-zone p { pointer-events: none; }
+  .drop-zone .title { font-size: 15px; font-weight: 500; margin-bottom: 4px; }
+  .drop-zone .hint { font-size: 13px; color: #9a8a82; }
+  .preview-wrap { border-radius: 16px; overflow: hidden; border: 1px solid #4a3040; margin-bottom: 16px; position: relative; }
+  .preview-wrap img { width: 100%; max-height: 280px; object-fit: cover; display: block; }
+  .reset-btn {
+    position: absolute; top: 10px; right: 10px;
+    background: rgba(36,18,32,0.8); border: 1px solid #6b4a5a; border-radius: 8px;
+    padding: 6px 10px; color: #f3e9dc; font-size: 12px; cursor: pointer;
+  }
+  .label-sm { font-size: 12px; color: #9a8a82; margin-bottom: 8px; letter-spacing: 0.5px; text-transform: uppercase; }
+  .tones { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .tone-pill {
+    padding: 7px 14px; border-radius: 999px; font-size: 13px; cursor: pointer;
+    border: 1px solid #4a3040; background: transparent; color: #c9b8ae;
+  }
+  .tone-pill.active { border-color: #d4a24e; background: rgba(212,162,78,0.15); color: #d4a24e; }
+  textarea {
+    width: 100%; background: rgba(255,255,255,0.03); border: 1px solid #4a3040;
+    border-radius: 12px; padding: 12px 14px; color: #f3e9dc; font-size: 14px;
+    margin-bottom: 16px; resize: none; outline: none; font-family: inherit;
+  }
+  button.primary {
+    width: 100%; padding: 14px; border-radius: 12px; font-size: 15px;
+    background: linear-gradient(135deg, #d4a24e, #b8823a); color: #241220;
+    border: none; font-weight: 600; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  button.primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.secondary {
+    width: 100%; margin-top: 14px; background: transparent; border: 1px solid #4a3040;
+    border-radius: 12px; padding: 12px; color: #c9b8ae; font-size: 13.5px;
+    display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer;
+  }
+  .error-box {
+    background: rgba(200,80,80,0.12); border: 1px solid rgba(200,80,80,0.3);
+    border-radius: 12px; padding: 12px 16px; font-size: 13.5px; color: #f0c0c0; margin-bottom: 20px;
+  }
+  .reply-card {
+    background: rgba(255,255,255,0.03); border: 1px solid #4a3040; border-radius: 14px;
+    padding: 16px 18px; display: flex; justify-content: space-between; align-items: flex-start;
+    gap: 12px; cursor: pointer; margin-bottom: 10px;
+  }
+  .reply-card p { font-size: 15px; line-height: 1.5; }
+  .spin { animation: spin 1s linear infinite; display: inline-block; }
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">✨ SHUKAANSI AI</div>
+  <h1 class="fraunces">Jawaab macquul ah,<br>mar kasta.</h1>
+  <p class="sub">Geli screenshot-ka sheekaysigaaga, waxaanan kuu soo jeedin doonaa jawaabo xiiso leh.</p>
+
+  <div id="dropZone" class="drop-zone">
+    <input id="fileInput" type="file" accept="image/*" />
+    <div style="font-size:28px; color:#d4a24e; margin-bottom:12px;">⬆</div>
+    <p class="title">Riix ama halkan ku tuur screenshot-ka</p>
+    <p class="hint">PNG ama JPG</p>
+  </div>
+
+  <div id="editArea" class="hidden">
+    <div class="preview-wrap">
+      <img id="previewImg" src="" />
+      <button class="reset-btn" onclick="resetApp()">Bedel sawir</button>
+    </div>
+
+    <div class="label-sm">Qaabka jawaabta</div>
+    <div class="tones" id="tones">
+      <div class="tone-pill active" data-tone="dhiirran">Dhiirran</div>
+      <div class="tone-pill" data-tone="qosol">Qosol leh</div>
+      <div class="tone-pill" data-tone="fudud">Fudud & sharaf</div>
+    </div>
+
+    <textarea id="contextInput" rows="2" placeholder="Ikhtiyaari: macluumaad dheeraad ah"></textarea>
+
+    <button class="primary" id="getRepliesBtn" onclick="getReplies()">
+      <span id="btnLabel">💬 Hel Jawaabo</span>
+    </button>
+  </div>
+
+  <div id="errorBox" class="error-box hidden"></div>
+
+  <div id="repliesArea" class="hidden">
+    <div class="label-sm">Soo jeedinta jawaabaha</div>
+    <div id="repliesList"></div>
+    <button class="secondary" onclick="getReplies()">🔄 Jawaabo kale ii soo saar</button>
+  </div>
+</div>
+
+<script>
+  let imageBase64 = null;
+  let mediaType = "image/png";
+  let currentTone = "dhiirran";
+
+  const fileInput = document.getElementById("fileInput");
+  const dropZone = document.getElementById("dropZone");
+  const editArea = document.getElementById("editArea");
+  const previewImg = document.getElementById("previewImg");
+  const errorBox = document.getElementById("errorBox");
+  const repliesArea = document.getElementById("repliesArea");
+  const repliesList = document.getElementById("repliesList");
+  const getRepliesBtn = document.getElementById("getRepliesBtn");
+  const btnLabel = document.getElementById("btnLabel");
+
+  fileInput.addEventListener("change", (e) => handleFile(e.target.files[0]));
+  dropZone.addEventListener("dragover", (e) => e.preventDefault());
+  dropZone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  });
+
+  document.querySelectorAll(".tone-pill").forEach((pill) => {
+    pill.addEventListener("click", () => {
+      document.querySelectorAll(".tone-pill").forEach((p) => p.classList.remove("active"));
+      pill.classList.add("active");
+      currentTone = pill.dataset.tone;
+    });
+  });
+
+  function handleFile(file) {
+    if (!file) return;
+    hideError();
+    repliesArea.classList.add("hidden");
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result;
+      imageBase64 = result.split(",")[1];
+      mediaType = file.type || "image/png";
+      previewImg.src = result;
+      dropZone.classList.add("hidden");
+      editArea.classList.remove("hidden");
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function resetApp() {
+    imageBase64 = null;
+    dropZone.classList.remove("hidden");
+    editArea.classList.add("hidden");
+    repliesArea.classList.add("hidden");
+    hideError();
+    fileInput.value = "";
+  }
+
+  function showError(msg) {
+    errorBox.textContent = msg;
+    errorBox.classList.remove("hidden");
+  }
+  function hideError() {
+    errorBox.classList.add("hidden");
+  }
+
+  async function getReplies() {
+    if (!imageBase64) {
+      showError("Fadlan marka hore geli screenshot-ka sheekaysiga.");
+      return;
+    }
+    hideError();
+    repliesArea.classList.add("hidden");
+    getRepliesBtn.disabled = true;
+    btnLabel.innerHTML = '<span class="spin">⏳</span> Falanqaynaya...';
+
+    const context = document.getElementById("contextInput").value;
+
+    try {
+      const res = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageBase64, mediaType, context, tone: currentTone }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        showError(data.error || "Wax baa qaldamay.");
+      } else if (!data.replies || data.replies.length === 0) {
+        showError(data.context_summary || "Wax jawaab ah lama helin.");
+      } else {
+        renderReplies(data.replies);
+      }
+    } catch (err) {
+      showError("Wax baa qaldamay. Fadlan isku day mar kale.");
+    } finally {
+      getRepliesBtn.disabled = false;
+      btnLabel.innerHTML = "💬 Hel Jawaabo";
+    }
+  }
+
+  function renderReplies(replies) {
+    repliesList.innerHTML = "";
+    replies.forEach((r) => {
+      const card = document.createElement("div");
+      card.className = "reply-card";
+      card.innerHTML = `<p>${escapeHtml(r)}</p><span style="flex-shrink:0;">📋</span>`;
+      card.addEventListener("click", () => {
+        navigator.clipboard.writeText(r).catch(() => {});
+        card.querySelector("span").textContent = "✓";
+        setTimeout(() => (card.querySelector("span").textContent = "📋"), 1500);
+      });
+      repliesList.appendChild(card);
+    });
+    repliesArea.classList.remove("hidden");
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+</script>
+</body>
+  </html><!DOCTYPE html>
+<html lang="so">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Shukaansi AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(160deg, #241220 0%, #3a1a2e 45%, #1a1024 100%);
+    color: #f3e9dc;
+    min-height: 100vh;
+  }
+  .fraunces { font-family: 'Fraunces', serif; }
+  .wrap { max-width: 560px; margin: 0 auto; padding: 48px 20px 80px; }
+  .eyebrow {
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    font-size: 12px; letter-spacing: 2px; text-transform: uppercase;
+    color: #d4a24e; margin-bottom: 14px; text-align: center;
+  }
+  h1 { font-size: 34px; font-weight: 700; line-height: 1.15; text-align: center; margin-bottom: 10px; }
+  .sub { color: #c9b8ae; font-size: 15px; max-width: 380px; margin: 0 auto 40px; text-align: center; }
+  .drop-zone {
+    position: relative;
+    border: 1.5px dashed #6b4a5a;
+    border-radius: 16px;
+    padding: 48px 24px;
+    text-align: center;
+    background: rgba(255,255,255,0.02);
+    overflow: hidden;
+    cursor: pointer;
+  }
+  .drop-zone input {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    opacity: 0; cursor: pointer;
+  }
+  .drop-zone p { pointer-events: none; }
+  .drop-zone .title { font-size: 15px; font-weight: 500; margin-bottom: 4px; }
+  .drop-zone .hint { font-size: 13px; color: #9a8a82; }
+  .preview-wrap { border-radius: 16px; overflow: hidden; border: 1px solid #4a3040; margin-bottom: 16px; position: relative; }
+  .preview-wrap img { width: 100%; max-height: 280px; object-fit: cover; display: block; }
+  .reset-btn {
+    position: absolute; top: 10px; right: 10px;
+    background: rgba(36,18,32,0.8); border: 1px solid #6b4a5a; border-radius: 8px;
+    padding: 6px 10px; color: #f3e9dc; font-size: 12px; cursor: pointer;
+  }
+  .label-sm { font-size: 12px; color: #9a8a82; margin-bottom: 8px; letter-spacing: 0.5px; text-transform: uppercase; }
+  .tones { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .tone-pill {
+    padding: 7px 14px; border-radius: 999px; font-size: 13px; cursor: pointer;
+    border: 1px solid #4a3040; background: transparent; color: #c9b8ae;
+  }
+  .tone-pill.active { border-color: #d4a24e; background: rgba(212,162,78,0.15); color: #d4a24e; }
+  textarea {
+    width: 100%; background: rgba(255,255,255,0.03); border: 1px solid #4a3040;
+    border-radius: 12px; padding: 12px 14px; color: #f3e9dc; font-size: 14px;
+    margin-bottom: 16px; resize: none; outline: none; font-family: inherit;
+  }
+  button.primary {
+    width: 100%; padding: 14px; border-radius: 12px; font-size: 15px;
+    background: linear-gradient(135deg, #d4a24e, #b8823a); color: #241220;
+    border: none; font-weight: 600; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  button.primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.secondary {
+    width: 100%; margin-top: 14px; background: transparent; border: 1px solid #4a3040;
+    border-radius: 12px; padding: 12px; color: #c9b8ae; font-size: 13.5px;
+    display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer;
+  }
+  .error-box {
+    background: rgba(200,80,80,0.12); border: 1px solid rgba(200,80,80,0.3);
+    border-radius: 12px; padding: 12px 16px; font-size: 13.5px; color: #f0c0c0; margin-bottom: 20px;
+  }
+  .reply-card {
+    background: rgba(255,255,255,0.03); border: 1px solid #4a3040; border-radius: 14px;
+    padding: 16px 18px; display: flex; justify-content: space-between; align-items: flex-start;
+    gap: 12px; cursor: pointer; margin-bottom: 10px;
+  }
+  .reply-card p { font-size: 15px; line-height: 1.5; }
+  .spin { animation: spin 1s linear infinite; display: inline-block; }
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">✨ SHUKAANSI AI</div>
+  <h1 class="fraunces">Jawaab macquul ah,<br>mar kasta.</h1>
+  <p class="sub">Geli screenshot-ka sheekaysigaaga, waxaanan kuu soo jeedin doonaa jawaabo xiiso leh.</p>
+
+  <div id="dropZone" class="drop-zone">
+    <input id="fileInput" type="file" accept="image/*" />
+    <div style="font-size:28px; color:#d4a24e; margin-bottom:12px;">⬆</div>
+    <p class="title">Riix ama halkan ku tuur screenshot-ka</p>
+    <p class="hint">PNG ama JPG</p>
+  </div>
+
+  <div id="editArea" class="hidden">
+    <div class="preview-wrap">
+      <img id="previewImg" src="" />
+      <button class="reset-btn" onclick="resetApp()">Bedel sawir</button>
+    </div>
+
+    <div class="label-sm">Qaabka jawaabta</div>
+    <div class="tones" id="tones">
+      <div class="tone-pill active" data-tone="dhiirran">Dhiirran</div>
+      <div class="tone-pill" data-tone="qosol">Qosol leh</div>
+      <div class="tone-pill" data-tone="fudud">Fudud & sharaf</div>
+    </div>
+
+    <textarea id="contextInput" rows="2" placeholder="Ikhtiyaari: macluumaad dheeraad ah"></textarea>
+
+    <button class="primary" id="getRepliesBtn" onclick="getReplies()">
+      <span id="btnLabel">💬 Hel Jawaabo</span>
+    </button>
+  </div>
+
+  <div id="errorBox" class="error-box hidden"></div>
+
+  <div id="repliesArea" class="hidden">
+    <div class="label-sm">Soo jeedinta jawaabaha</div>
+    <div id="repliesList"></div>
+    <button class="secondary" onclick="getReplies()">🔄 Jawaabo kale ii soo saar</button>
+  </div>
+</div>
+
+<script>
+  let imageBase64 = null;
+  let mediaType = "image/png";
+  let currentTone = "dhiirran";
+
+  const fileInput = document.getElementById("fileInput");
+  const dropZone = document.getElementById("dropZone");
+  const editArea = document.getElementById("editArea");
+  const previewImg = document.getElementById("previewImg");
+  const errorBox = document.getElementById("errorBox");
+  const repliesArea = document.getElementById("repliesArea");
+  const repliesList = document.getElementById("repliesList");
+  const getRepliesBtn = document.getElementById("getRepliesBtn");
+  const btnLabel = document.getElementById("btnLabel");
+
+  fileInput.addEventListener("change", (e) => handleFile(e.target.files[0]));
+  dropZone.addEventListener("dragover", (e) => e.preventDefault());
+  dropZone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  });
+
+  document.querySelectorAll(".tone-pill").forEach((pill) => {
+    pill.addEventListener("click", () => {
+      document.querySelectorAll(".tone-pill").forEach((p) => p.classList.remove("active"));
+      pill.classList.add("active");
+      currentTone = pill.dataset.tone;
+    });
+  });
+
+  function handleFile(file) {
+    if (!file) return;
+    hideError();
+    repliesArea.classList.add("hidden");
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result;
+      imageBase64 = result.split(",")[1];
+      mediaType = file.type || "image/png";
+      previewImg.src = result;
+      dropZone.classList.add("hidden");
+      editArea.classList.remove("hidden");
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function resetApp() {
+    imageBase64 = null;
+    dropZone.classList.remove("hidden");
+    editArea.classList.add("hidden");
+    repliesArea.classList.add("hidden");
+    hideError();
+    fileInput.value = "";
+  }
+
+  function showError(msg) {
+    errorBox.textContent = msg;
+    errorBox.classList.remove("hidden");
+  }
+  function hideError() {
+    errorBox.classList.add("hidden");
+  }
+
+  async function getReplies() {
+    if (!imageBase64) {
+      showError("Fadlan marka hore geli screenshot-ka sheekaysiga.");
+      return;
+    }
+    hideError();
+    repliesArea.classList.add("hidden");
+    getRepliesBtn.disabled = true;
+    btnLabel.innerHTML = '<span class="spin">⏳</span> Falanqaynaya...';
+
+    const context = document.getElementById("contextInput").value;
+
+    try {
+      const res = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageBase64, mediaType, context, tone: currentTone }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        showError(data.error || "Wax baa qaldamay.");
+      } else if (!data.replies || data.replies.length === 0) {
+        showError(data.context_summary || "Wax jawaab ah lama helin.");
+      } else {
+        renderReplies(data.replies);
+      }
+    } catch (err) {
+      showError("Wax baa qaldamay. Fadlan isku day mar kale.");
+    } finally {
+      getRepliesBtn.disabled = false;
+      btnLabel.innerHTML = "💬 Hel Jawaabo";
+    }
+  }
+
+  function renderReplies(replies) {
+    repliesList.innerHTML = "";
+    replies.forEach((r) => {
+      const card = document.createElement("div");
+      card.className = "reply-card";
+      card.innerHTML = `<p>${escapeHtml(r)}</p><span style="flex-shrink:0;">📋</span>`;
+      card.addEventListener("click", () => {
+        navigator.clipboard.writeText(r).catch(() => {});
+        card.querySelector("span").textContent = "✓";
+        setTimeout(() => (card.querySelector("span").textContent = "📋"), 1500);
+      });
+      repliesList.appendChild(card);
+    });
+    repliesArea.classList.remove("hidden");
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+</script>
+</body>
+  </html>
