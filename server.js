@@ -7,7 +7,7 @@ app.use(cors());
 app.use(express.json({ limit: "15mb" }));
 app.use(express.static(path.join(__dirname, "public")));
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 
 app.post("/api/analyze", async (req, res) => {
   try {
@@ -16,8 +16,8 @@ app.post("/api/analyze", async (req, res) => {
     if (!imageBase64) {
       return res.status(400).json({ error: "Sawir lama helin." });
     }
-    if (!GEMINI_API_KEY) {
-      return res.status(500).json({ error: "Server-ku ma haysto GEMINI_API_KEY. Fadlan deji environment variable-ka." });
+    if (!OPENROUTER_API_KEY) {
+      return res.status(500).json({ error: "Server-ku ma haysto OPENROUTER_API_KEY. Fadlan deji environment variable-ka." });
     }
 
     const toneInstruction = {
@@ -36,66 +36,4 @@ Aqoonta dhaqameed ee aad isticmaali doonto:
 
 Shaqadaadu waa:
 1. Aqoso sheekaysiga sawirka ku jira (qof kasta wuxuu qoray maxaa).
-2. Ka soo saar SEDDEX (3) jawaab oo kala duwan oo lagu jawaabi karo fariinta ugu dambeysay, oo dhammaantood ku qoran Af-Soomaali oo ${toneInstruction}, iyagoo u dhigma dhaqanka shukaansiga Soomaalida sida kor lagu sharraxay.
-3. Jawaabaha ha ahaadeen kuwo dabiici ah, gaagaaban (hal ama laba jumlo), aan la celcelin (repetitive).
-4. HA KU DARIN wax faah faahin ah, sharraxaad, ama qoraal dheeraad ah. KELIYA soo celi JSON pure ah, sida tusaalahan, iyo waxba kale:
-{"replies": ["jawaab 1", "jawaab 2", "jawaab 3"], "context_summary": "hal jumlo oo Af-Soomaali ah oo sharraxaysa waxa sheekaysigu ka hadlayo"}
-Haddii sawirka aanu ahayn sheekaysi ama aanad wax ka fahmi karin, soo celi: {"replies": [], "context_summary": "Ma arki karo sheekaysi cad oo sawirka ku jira."}`;
-
-    const userText = context && context.trim()
-      ? `Macluumaad dheeraad ah oo aan bixiyay: ${context.trim()}`
-      : "Sawirka falanqee oo jawaabo ii soo saar.";
-
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: systemPrompt }] },
-          contents: [
-            {
-              role: "user",
-              parts: [
-                {
-                  inline_data: {
-                    mime_type: mediaType || "image/png",
-                    data: imageBase64,
-                  },
-                },
-                { text: userText },
-              ],
-            },
-          ],
-          generationConfig: { temperature: 0.8, maxOutputTokens: 1000 },
-        }),
-      }
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      console.error("Gemini API error:", data);
-      return res.status(500).json({ error: data.error?.message || "Gemini API qalad ayey soo celisay." });
-    }
-
-    let raw = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-    raw = raw.replace(/```json|```/g, "").trim();
-
-    let parsed;
-    try {
-      parsed = JSON.parse(raw);
-    } catch (e) {
-      console.error("JSON parse failed:", raw);
-      return res.status(500).json({ error: "Jawaabta AI-ga si sax ah looma fahmin. Isku day mar kale." });
-    }
-
-    res.json(parsed);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Wax baa qaldamay server-ka." });
-  }
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Shukaansi AI server running on port ${PORT}`));
+2. Ka s
