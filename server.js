@@ -55,7 +55,7 @@ Haddii sawirka aanu ahayn sheekaysi ama aanad wax ka fahmi karin, soo celi: {"re
           "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
         },
         body: JSON.stringify({
-          model: "google/gemini-2.0-flash-exp:free",
+          model: "meta-llama/llama-4-maverick:free",
           messages: [
             { role: "system", content: systemPrompt },
             {
