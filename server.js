@@ -55,7 +55,7 @@ Haddii sawirka aanu ahayn sheekaysi ama aanad wax ka fahmi karin, soo celi: {"re
           "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
         },
         body: JSON.stringify({
-          model: "qwen/qwen2.5-vl-32b-instruct:free",
+          model: "google/gemma-4-31b-it:free",
           messages: [
             { role: "system", content: systemPrompt },
             {
