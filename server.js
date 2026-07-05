@@ -7,7 +7,7 @@ app.use(cors());
 app.use(express.json({ limit: "15mb" }));
 app.use(express.static(path.join(__dirname, "public")));
 
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 app.post("/api/analyze", async (req, res) => {
   try {
@@ -16,8 +16,8 @@ app.post("/api/analyze", async (req, res) => {
     if (!imageBase64) {
       return res.status(400).json({ error: "Sawir lama helin." });
     }
-    if (!ANTHROPIC_API_KEY) {
-      return res.status(500).json({ error: "Server-ku ma haysto ANTHROPIC_API_KEY. Fadlan deji environment variable-ka." });
+    if (!GEMINI_API_KEY) {
+      return res.status(500).json({ error: "Server-ku ma haysto GEMINI_API_KEY. Fadlan deji environment variable-ka." });
     }
 
     const toneInstruction = {
@@ -46,41 +46,40 @@ Haddii sawirka aanu ahayn sheekaysi ama aanad wax ka fahmi karin, soo celi: {"re
       ? `Macluumaad dheeraad ah oo aan bixiyay: ${context.trim()}`
       : "Sawirka falanqee oo jawaabo ii soo saar.";
 
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-6",
-        max_tokens: 1000,
-        system: systemPrompt,
-        messages: [
-          {
-            role: "user",
-            content: [
-              {
-                type: "image",
-                source: { type: "base64", media_type: mediaType || "image/png", data: imageBase64 },
-              },
-              { type: "text", text: userText },
-            ],
-          },
-        ],
-      }),
-    });
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: systemPrompt }] },
+          contents: [
+            {
+              role: "user",
+              parts: [
+                {
+                  inline_data: {
+                    mime_type: mediaType || "image/png",
+                    data: imageBase64,
+                  },
+                },
+                { text: userText },
+              ],
+            },
+          ],
+          generationConfig: { temperature: 0.8, maxOutputTokens: 1000 },
+        }),
+      }
+    );
 
     const data = await response.json();
 
     if (!response.ok) {
-      console.error("Anthropic API error:", data);
-      return res.status(500).json({ error: data.error?.message || "Anthropic API qalad ayey soo celisay." });
+      console.error("Gemini API error:", data);
+      return res.status(500).json({ error: data.error?.message || "Gemini API qalad ayey soo celisay." });
     }
 
-    const textBlock = data.content?.find((c) => c.type === "text");
-    let raw = textBlock ? textBlock.text : "";
+    let raw = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
     raw = raw.replace(/```json|```/g, "").trim();
 
     let parsed;
